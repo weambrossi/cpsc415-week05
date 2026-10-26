@@ -22,3 +22,6 @@ venv/
 .gradle/
 bin/
 obj/
+
+# local test-run logs
+.runs/
