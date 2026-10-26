@@ -174,7 +174,7 @@ card digits are blacked out; sources and hand checks are in
 - **Safeway: model misread, caught by the checker.** The total, date (null) and 22 item lines were
   right, but MiMo added up the "Card Savings" lines into `discount` even though the item prices
   shown are already after savings, so the discount was counted twice (`subtotal - discount + tax is
-  57.51 but the receipt says 72.91`). It also shifted the produce lines: the 2.51 lb weight that
+  57.51 but the receipt says 72.91`). A second read of the same image also shifted the produce lines: the 2.51 lb weight that
   belongs to the oranges went on the bell pepper, and broccoli's 1.38 went on the spinach. This is
   partly spec ambiguity (the spec never says what to do with savings that are already netted out)
   and partly a misread of the column layout.
