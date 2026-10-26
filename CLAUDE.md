@@ -4,20 +4,23 @@
      Graded: does it reflect how the team actually works? -->
 
 ## What this repository is
-One paragraph. Link to the current `spec.md`.
+Week 5 lab: a command-line program that reads a receipt photo with a vision model into JSON and
+checks in plain code that the items, subtotal, discount, tax and total add up. See
+[`spec.md`](spec.md) and [`plan.md`](plan.md).
 
 ## Commands
 ```
-# build
-# test
-# run
-# lint
+# setup   python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
+# test    .venv/bin/python -m pytest            (model tests skipped without OPENROUTER_API_KEY)
+# run     .venv/bin/python read_receipt.py images/receipt-01.png
+# eval    .venv/bin/python eval.py [--dir images] [--model SLUG]
+# lint    .venv/bin/ruff check .
 ```
 
 ## Conventions
-- Language and style rules the agent must follow.
-- Where tests live and how they are named.
-- Branch and PR naming.
+- Python 3.13 in `.venv` (system `python3` is 3.9; use `.venv/bin/python`).
+- Tests in `tests/test_*.py`. Model tests carry `@pytest.mark.model` and read each image once.
+- No branches this week: commit to main.
 
 ## Working rules
 
@@ -38,3 +41,5 @@ For an introductory lab, follow its explicitly assigned stages; the full chain b
 
 ## Common mistakes
 Things the agent got wrong before and must not repeat. Add to this list as they happen.
+- Ran `cat .env` while debugging and printed the API key into the transcript. Never read `.env`;
+  check whether a key is set with `test -n "$OPENROUTER_API_KEY"`.
