@@ -5,9 +5,9 @@ CHAT_MODEL the model. Each image is read once (see the reads fixture in conftest
 """
 
 import pytest
+from conftest import expected
 
 from checker import check
-from conftest import expected
 
 EXPECTED = expected()
 NAMES = sorted(EXPECTED)

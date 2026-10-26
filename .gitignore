@@ -25,3 +25,5 @@ obj/
 
 # local test-run logs
 .runs/
+.ruff_cache/
+.pytest_cache/
