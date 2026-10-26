@@ -1,5 +1,6 @@
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["."]
 markers = ["model: calls a vision model through OpenRouter; skipped when OPENROUTER_API_KEY is not set"]
 
 [tool.ruff]
