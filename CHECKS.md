@@ -128,6 +128,63 @@ showed $0.15 spent for the whole day, eval runs included.
 
 The key was restored afterward with `git checkout -- images/expected.json`.
 
-## Own receipts (`my-receipts/`)
+## Extra receipts (`my-receipts/`)
 
-*To be filled in after the photographs are added.*
+**These are not my own photographs.** They are four receipt images found online, chosen for
+range (crumpled, angled, high-contrast, and one whose printed numbers do not add up). Names and
+card digits are blacked out; sources and hand checks are in
+[`my-receipts/SOURCE.md`](my-receipts/SOURCE.md). Run with `RECEIPT_DIR=my-receipts python eval.py`.
+
+### `minimax/minimax-m3`, reasoning on
+
+| Receipt | merchant | date | items | total | checker | Tokens in | Tokens out | Seconds |
+|---|---|---|---|---|---|---|---|---|
+| downtown-market.png | PASS | PASS | PASS | PASS | FAIL (correct) | 693 | 465 | 3.9 |
+| safeway.jpg | READ FAILED | | | | | - | - | - |
+| target.jpg | READ FAILED | | | | | - | - | - |
+| walmart.png | PASS | PASS | PASS | PASS | PASS | 818 | 655 | 3.2 |
+
+9/20. Both failed reads: `empty reply from minimax/minimax-m3 (finish_reason: length)`.
+
+### `xiaomi/mimo-v2.6-flash`, reasoning off
+
+| Receipt | merchant | date | items | total | checker | Tokens in | Tokens out | Seconds |
+|---|---|---|---|---|---|---|---|---|
+| downtown-market.png | PASS | PASS | PASS | PASS | FAIL (correct) | 472 | 253 | 2.1 |
+| safeway.jpg | PASS | PASS | PASS | PASS | FAIL | 752 | 816 | 5.2 |
+| target.jpg | PASS | PASS | FAIL (36 vs 35) | PASS | FAIL | 2442 | 955 | 5.2 |
+| walmart.png | PASS | PASS | PASS | PASS | PASS | 560 | 137 | 1.7 |
+
+16/20.
+
+### What went wrong, and whether the checker caught it
+
+- **MiniMax on the two long receipts: a failed read, not a crash.** With reasoning on it thought
+  through the whole 4,000-token output budget on the 22- and 35-line receipts and returned no
+  content. This is the same `finish_reason: length` failure the setup page describes for MiMo, now
+  on the other model when the image is long. Spec behavior 1 held: the eval reported it and moved
+  on. Not fixed here; the options are a larger `MAX_TOKENS` for MiniMax or `CHAT_REASONING=off`,
+  which costs it the faded-date reading on receipt-04.
+- **Downtown Market: the checker caught a receipt that is wrong on paper.** Both models read every
+  number correctly, and the checker reported
+  `items sum is 56.41 but the receipt says 54.42 (off by 1.99); subtotal - discount + tax is 55.81
+  but the receipt says 59.31 (off by 3.50)`. That is the right answer: the printed total ignores the
+  printed discount. The FAIL in the checker column is the intended result (the eval has no way to
+  say "this receipt should be flagged"; that would be a small next change).
+- **Safeway: model misread, caught by the checker.** The total, date (null) and 22 item lines were
+  right, but MiMo added up the "Card Savings" lines into `discount` even though the item prices
+  shown are already after savings, so the discount was counted twice (`subtotal - discount + tax is
+  57.51 but the receipt says 72.91`). It also shifted the produce lines: the 2.51 lb weight that
+  belongs to the oranges went on the bell pepper, and broccoli's 1.38 went on the spinach. This is
+  partly spec ambiguity (the spec never says what to do with savings that are already netted out)
+  and partly a misread of the column layout.
+- **Target: model misread, caught by the checker.** Total, date and merchant were right. It read the
+  "2 @ $1.00 ea" note under the last Chobani as an extra item, giving 36 lines and an items sum of
+  248.50 against the printed 246.00; the checker reported the 2.50 gap. A second read of the same
+  image gave a different discount (59.84, every "Saved" line added up), so reads of busy receipts
+  are not repeatable.
+- **Walmart:** a clean pass on both models, despite the blown-out contrast.
+
+The pattern: both models are good at the headline fields (merchant, date, total: 15/15 where the
+read worked), and the arithmetic is where they slip. In every case where a model misread a number
+that matters, the checker reported it instead of passing it along.

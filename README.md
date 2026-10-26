@@ -64,10 +64,23 @@ receipt. The guard hook never fired because the agent never tried to touch `imag
 problem was that it ran `cat .env` while debugging and printed the API key, which the guard
 doesn't cover; that's now in `CLAUDE.md` under Common mistakes.
 
-## My own receipts
+## Extra receipts (found online, not my own photos)
 
-*TODO: two photos in `my-receipts/` with a hand-written `expected.json`, both models, what each got
-wrong, and whether the checker caught it.*
+I did not photograph receipts of my own. Instead `my-receipts/` has four receipt images found
+online (crumpled Safeway, angled Target, high-contrast Walmart, and a clean "Downtown Market"
+receipt whose numbers do not add up), with names and card digits blacked out and an
+`expected.json` I wrote by hand ([`my-receipts/SOURCE.md`](my-receipts/SOURCE.md)).
+
+- **MiniMax** read Walmart and Downtown Market correctly but returned nothing on the two long
+  receipts (Safeway, Target): reasoning used the whole output budget (`finish_reason: length`).
+  The program reported a failed read instead of crashing.
+- **MiMo** read all four. Merchant, date and total were right every time. On Safeway it counted the
+  card savings as a discount on prices that were already discounted, and on Target it read a
+  "2 @ $1.00 ea" note as an extra item. **The checker caught both**, with the amounts and the gap.
+- On Downtown Market both models read the paper correctly, and the checker reported that the paper
+  itself is wrong: the items do not add up to the subtotal and the total ignores the discount.
+
+Details per receipt are in [`CHECKS.md`](CHECKS.md).
 
 ## One line I can explain
 
