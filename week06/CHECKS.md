@@ -96,11 +96,33 @@ checks for the package name anywhere in `spec.md` and the Week 5 spec already co
 `OPENROUTER_API_KEY`. A substring match is not a dependency list.
 
 ## Review
-_Filled in after PR 1 in the team repository is reviewed and merged._
-
-- PR:
-- Findings by pass:
-- Fixed:
-- Pushed back on:
-- Exit code of the last reviewer run:
-- Approved by:
+- **PR:** https://github.com/weambrossi/cpsc415-tp1-creatures/pull/2 (branch `week06-ethan`: the
+  generator, `images/ethan/`, `prompts/ethan.json`). Built on the plan PR,
+  https://github.com/weambrossi/cpsc415-tp1-creatures/pull/1, which was reviewed the same way.
+- **Reviewer:** `review.py --base plan-ethan`. `minimax/minimax-m3` exited 2 on every attempt (it
+  spent its 2,000-token budget reasoning and never answered; the gate fails closed), so the runs
+  used `--model xiaomi/mimo-v2.6-flash`, about $0.002 each. Every run's output is a PR comment.
+- **Findings by pass, run 1 (exit 1):**
+  - Pass 1: manifest `requirements` spread from the prompt rather than the four shared ones.
+  - Pass 2: no-key message goes to stderr, not stdout; a missing `usage.cost` was summed as $0.
+  - Pass 3: `BLOCKED` lists more words than spec G4 named.
+  - Pass 4: README pointed at another repository with no link.
+- **Run 2 (exit 1):** pass 2: `r.data[0]` with no check for an empty reply; a failure mid-run lost
+  the manifest. Pass 3: no-key message wording; one test asserting two things.
+- **Run 3 (exit 1):** pass 2: an item whose own text says "no change needed". Pass 3: `IMAGE_MODEL`
+  undocumented; an import inside tests. Pass 4: link not pinned to a commit.
+- **Fixed** (tests first where code changed, committed red, then green): missing cost recorded as
+  `null` and reported in the summary; empty reply raises a clear `RuntimeError`; `manifest.json`
+  rewritten after every image so a failure keeps the record of images already paid for; spec G4,
+  G5, G7 and failure handling made exact; `IMAGE_MODEL` documented; test split; import moved; link
+  pinned. Tests went from 17 to 21.
+- **Pushed back on:** run 1's pass-1 item was half right: the spec, not the code, was wrong
+  (Ethan's prompts carry per-creature requirements on purpose), so the spec was fixed, not the
+  code. Run 1's stderr item: an error message belongs on stderr; the spec now says so. Run 3's
+  pass-2 item: a non-finding, answered on the PR. On PR 1, a finding that `test_repo.py` would fail
+  on case (it lowercases both sides) and on Flask/Playwright (not in `requirements.txt` yet; failing
+  then is the point), answered on the PR.
+- **Exit code of the last run:** 0 ("No findings."), on both PRs.
+- **Gate:** the pre-push hook ran ruff and the no-key tests before every push; all passed. On the
+  first push it caught a ruff error (PIE810) in the course's own `guard.py`.
+- **Approved by:** _(Joud, on GitHub, before the merge)_
