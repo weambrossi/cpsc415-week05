@@ -2,7 +2,7 @@
 
 All runs on October 31, 2026. Image model `black-forest-labs/flux.2-klein-4b`; critic
 `minimax/minimax-m3` (reasoning on), checked by `xiaomi/mimo-v2.6-flash` (reasoning off,
-`{"effort": "none"}`). Costs are `usage.cost` from each reply. **Total for the lab: $0.126.**
+`{"effort": "none"}`). Costs are `usage.cost` from each reply. **Total for the lab: $0.134** (including the two open-ended critique calls).
 
 ## The test loop: red, then green
 | Step | Red | Green |
@@ -66,21 +66,42 @@ The verdicts match, so `--compare` stays silent; only a person reading the evide
 one model's own description does not say "sweatband".
 
 ### Open-ended critique
-_Run by Ethan in his own terminal, not through the agent (lab step 5.2)._ Prompt: "Critique this
-poster. What is wrong with it?" on `images/dashell.jpg`.
+Prompt: "Critique this poster. What is wrong with it?" on `images/dashell.jpg`, model
+`minimax/minimax-m3`, no checklist and no spec. Lab step 5.2 says to run this in my own terminal;
+at my request the agent ran it as a plain one-off SDK call (no hook, no spec in the prompt).
 
-- Model:
-- What it claimed:
-- Which claims were true (compared with the checklist verdicts, the name read, and my eyes):
+- **Run 1** (`max_tokens=1500`): empty reply, `finish_reason: length`, still billed $0.0022. The
+  hidden reasoning spent the whole budget. An empty critique looks like "no problems" unless the
+  finish reason is checked.
+- **Run 2** (`max_tokens=4000`): eight numbered claims and a revision list, cut off mid-sentence
+  (`finish_reason: length` again), $0.0049.
+
+| # | Claim (summarized) | True? |
+|---|---|---|
+| 1 | No purpose: the only text is "DASHELL", no date, place, or call to action | True, and intended: the prompt demanded "no other text". The critic judged a poster the prompt never asked for. |
+| 2 | Banner and turtle compete; no clear hierarchy | Opinion; not checkable. |
+| 3 | Letters tilt individually and don't follow the curve; heavy outline and shadow | Partly: the outline and drop shadow are there; the letters follow the banner's curve closely when I look. |
+| 4 | Flat badge, 3D type, and detailed illustration clash | Opinion. |
+| 5 | Banner nearly touches the edges; turtle floats with no ground | True: the banner spans almost the full width and there is no ground shadow. |
+| 6 | Fine detail will be lost at a distance | Speculation, not visible in the image. |
+| 7 | 1024×1024 and square, too small for print | True, and intended (`aspect_ratio` 1:1). |
+| 8 | "Check the spelling": two Ls, "if the intended name is DASHEL, that is a typo" | False alarm. DASHELL is the requested name and is spelled correctly; both narrow name reads matched. |
+
+Compared with the checklist: the open-ended critique never said whether there is one creature, a
+white background, a sweatband, or a running pose, the things this image was asked to show. Its
+true claims are about design choices the prompt made on purpose, and its one claim about text
+invents doubt about a correct spelling, the same habit as the October 19 "Integratlon" critique,
+in a softer form.
 
 ### Which check caught what
-The narrow questions compared in code caught the one real failure in this run (Gemini's
-"ARCANE KNOWLEDGE" text) and confirmed all five names letter by letter, which a glance can skip.
-The second model caught nothing here, because both critics agreed; it can catch a critic that
-says "met" wrongly only when the two models are wrong in different ways. A person looking was the
-only check that noticed the sweatband/headband softness on DASHELL, so for Team Project 1's
-critique path I would keep the narrow checklist and name read in code, show each item's evidence
-line in the app, and add the second model only on items a person flags.
+The narrow questions compared in code caught the one real failure (Gemini's "ARCANE KNOWLEDGE"
+text) and confirmed all five names letter by letter, while the open-ended critique skipped every
+requirement and raised a false doubt about a correct spelling. The second model caught nothing
+here, because both critics agreed, and it can only catch a wrong "met" when the two models are
+wrong in different ways; a person looking was the only check that noticed the sweatband/headband
+softness on DASHELL. For Team Project 1's critique path I would keep the narrow checklist and name
+read checked in code, show each item's evidence line in the app, and add the second model only on
+items a person flags.
 
 ## Linter (`ruff check .`, ruff 0.17)
 - `week06/generate.py`: I001, import formatting on the lazy `from openrouter import OpenRouter`. Fixed.
