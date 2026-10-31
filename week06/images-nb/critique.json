@@ -1,0 +1,66 @@
+[
+  {
+    "name": "profowl",
+    "model": "minimax/minimax-m3",
+    "critique": {
+      "checks": [
+        {
+          "requirement": "There is exactly one creature in the image",
+          "met": true,
+          "evidence": "Only one owl creature is visible."
+        },
+        {
+          "requirement": "The background is plain white",
+          "met": true,
+          "evidence": "The creature and banner are isolated on a plain white background."
+        },
+        {
+          "requirement": "The name is shown in a banner at the top",
+          "met": true,
+          "evidence": "A top banner displays the name \"PROFOWL\"."
+        },
+        {
+          "requirement": "There is no text other than the name",
+          "met": false,
+          "evidence": "The open book also contains visible text including \"ARCANE KNOWLEDGE.\""
+        },
+        {
+          "requirement": "The creature wears glasses",
+          "met": true,
+          "evidence": "The owl is wearing large round glasses."
+        },
+        {
+          "requirement": "The creature holds a book or a pointer",
+          "met": true,
+          "evidence": "The owl is holding an open book."
+        }
+      ]
+    },
+    "raw": "\n\n{\"checks\":[{\"requirement\":\"There is exactly one creature in the image\",\"met\":true,\"evidence\":\"Only one owl creature is visible.\"},{\"requirement\":\"The background is plain white\",\"met\":true,\"evidence\":\"The creature and banner are isolated on a plain white background.\"},{\"requirement\":\"The name is shown in a banner at the top\",\"met\":true,\"evidence\":\"A top banner displays the name \\\"PROFOWL\\\".\"},{\"requirement\":\"There is no text other than the name\",\"met\":false,\"evidence\":\"The open book also contains visible text including \\\"ARCANE KNOWLEDGE.\\\"\"},{\"requirement\":\"The creature wears glasses\",\"met\":true,\"evidence\":\"The owl is wearing large round glasses.\"},{\"requirement\":\"The creature holds a book or a pointer\",\"met\":true,\"evidence\":\"The owl is holding an open book.\"}]}",
+    "usage": {
+      "in": 1768,
+      "out": 346,
+      "cost": 0.00085128,
+      "finish": "stop"
+    },
+    "check": {
+      "ok": false,
+      "problems": [
+        "1 requirement(s) reported unmet"
+      ],
+      "unmet": [
+        "There is no text other than the name"
+      ],
+      "missing": [],
+      "extra": []
+    },
+    "text_read": "PROFOWL",
+    "text_matches": true,
+    "usage_text": {
+      "in": 1592,
+      "out": 59,
+      "cost": 0.00049632,
+      "finish": "stop"
+    }
+  }
+]

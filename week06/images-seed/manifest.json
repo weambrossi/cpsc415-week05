@@ -1,0 +1,22 @@
+[
+  {
+    "name": "profowl",
+    "prompt": "An original cute creature-collector monster in colorful anime game art style: a wise professor owl wearing round glasses and holding an open book. Exactly one creature, centered, full body, on a plain white background. A banner across the top shows the name \"PROFOWL\" in large, clear capital letters. No other text anywhere in the image.",
+    "seed": 6101,
+    "requirements": [
+      "There is exactly one creature in the image",
+      "The background is plain white",
+      "The name is shown in a banner at the top",
+      "There is no text other than the name",
+      "The creature wears glasses",
+      "The creature holds a book or a pointer"
+    ],
+    "expected_text": "PROFOWL",
+    "model": "black-forest-labs/flux.2-klein-4b",
+    "aspect_ratio": "1:1",
+    "file": "profowl.jpg",
+    "media_type": "image/jpeg",
+    "cost": 0.014,
+    "seconds": 3.5
+  }
+]
