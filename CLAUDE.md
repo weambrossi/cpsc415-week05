@@ -38,6 +38,13 @@ For an introductory lab, follow its explicitly assigned stages; the full chain b
   a test disagrees with the key, say so and stop.
 - Tests live in tests/ (Python) or src/test (Java). Tests that call a model
   are marked and are skipped when no API key is set.
+- Week 6: the image-set lab lives in week06/. Stages assigned: intent, spec,
+  plan, tests, and (in the team repository only) a reviewed pull request.
+  Commit to main here; branches and PRs are for the team repository.
+- Image generation and vision calls are billed. One generation per prompt,
+  one critique per image, fixed seeds. Never loop over the model inside a test.
+- The critique is model output. The code compares it with the requirements;
+  it does not trust it.
 
 ## Common mistakes
 Things the agent got wrong before and must not repeat. Add to this list as they happen.
