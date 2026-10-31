@@ -99,8 +99,91 @@ under a dollar.
 | `python-dotenv` | Loads `OPENROUTER_API_KEY` and `CHAT_MODEL` from the gitignored `.env`. By hand, a few lines that parse `KEY=value`. |
 | `pytest` | The test runner: assertions with readable diffs, fixtures for the cached eval reads, and skip markers for tests that need a key. By hand, a script of asserts with no skip or selection. |
 | `ruff` | The linter the lab asks for (`ruff check .`). Development only. |
+| `openrouter` | Week 6. The official OpenRouter SDK: `client.images.generate` calls the Image API (`POST /api/v1/images`) and `client.chat.send` sends the image to a vision model, one client for both request shapes. By hand it would be two `requests` calls with different bodies, base64 handling, and error handling. Its `reasoning` object has no `enabled` field, so MiMo needs `{"effort": "none"}`. |
 
 ## Out of scope
 Correcting a receipt, any interface besides the command line, storage, currency conversion,
 multi-page receipts, and reading card numbers or names. A second model as checker was ruled out
 above.
+
+## Week 6: image set
+
+Implements [`intent/image-set.md`](intent/image-set.md). Everything lives in `week06/`. The
+Week 5 receipt reader above is unchanged.
+
+### 4. Generator (`week06/generate.py`)
+- **What it does:** reads `prompts.json` (five prompts, each with a name, a seed, its
+  requirements, and the expected name text), makes one Image API call per prompt, saves each image,
+  and writes `manifest.json` beside the images.
+- **Language:** Python 3.13, the same `.venv` as Weeks 3 to 5. **Why:** the class examples and the
+  SDK are Python, and the checker below must share the manifest format. Java was considered; it has
+  no OpenRouter SDK, so both HTTP requests would be written by hand for no gain in a lab this size.
+- **Model:** `black-forest-labs/flux.2-klein-4b` (default). **Why:** the class image model, about
+  $0.014 per image, accepts `seed` and `aspect_ratio`, 3 to 4 seconds per image. **Compared with**
+  `google/gemini-3.1-flash-lite-image` on one prompt (PROFOWL, same seed): about $0.03 to $0.04 per
+  image, priced per image token, and its output carries a SynthID watermark. The comparison records
+  cost from `usage.cost` and whether the same requirements are met.
+- **Interfaces:** `python3 generate.py prompts.json --out images [--model SLUG] [--only NAME]`.
+  Each manifest entry: `name`, `prompt`, `seed`, `requirements`, `expected_text`, `model`,
+  `aspect_ratio`, `file`, `media_type`, `cost`, `seconds`. `--only` regenerates one prompt (the
+  seed check and the comparison model) without paying for all five.
+- **Dependencies:** `openrouter` (see Dependencies).
+
+### 5. Critic-checker (`week06/critique.py`, `week06/checklist.py`)
+- **What it does:** for each image in a manifest, sends the image and a yes/no checklist made from
+  that prompt's requirements to a vision model, asks for JSON, then a second, narrow question:
+  "write the largest text in this image exactly as printed". `checklist.py` is plain code with no
+  model and no key: it extracts the JSON, compares the checklist with the requirements, compares
+  the name read with the expected name, and compares two critique files.
+- **Language:** Python 3.13. **Why:** same as the generator; the checker is pure functions that
+  the no-key tests import directly.
+- **Model:** `minimax/minimax-m3` with reasoning on (the class vision model; 24/25 on the Week 5
+  receipts). **Checked by:** `xiaomi/mimo-v2.6-flash` with reasoning off
+  (`reasoning={"effort": "none"}`), the cheaper, faster model from Week 5. A second model is the
+  check on the first; neither is trusted alone, and every disagreement is looked at by a person.
+- **Interfaces:** `python3 critique.py images/manifest.json [--model SLUG] [--out FILE]` writes a
+  critique file (per image: name, model, parsed critique, raw reply, usage, the code's check, the
+  name read, whether it matched). `python3 critique.py --compare A.json B.json` needs no key and
+  prints every requirement or name read where the two disagree.
+
+### Behavior (Week 6)
+Numbered requirements the tests check. "No key" means the test runs without `OPENROUTER_API_KEY`.
+
+9. **All met (no key).** A critique that answers every requirement, and only those, with
+   `met: true` is ok, with no problems.
+10. **Unmet, named (no key).** A requirement answered `met: false` (or anything other than `true`)
+    is reported unmet by its text.
+11. **Unanswered requirement (no key).** A requirement missing from the critique is a problem, even
+    if every answered one is met.
+12. **Invented requirement (no key).** An item in the critique that was not asked is a problem and
+    is reported by its text.
+13. **Loose matching of requirement text (no key).** Case, spacing, and punctuation differences in
+    the requirement text the critic copied back do not count as missing or invented.
+14. **Not JSON is a failed critique, not a crash (no key).** A reply with no JSON object (or JSON
+    without a `checks` list) fails the check with every requirement counted unanswered.
+15. **JSON inside prose or code fences is extracted (no key).**
+16. **Name text compared in code, not by the critic (no key).** The name read is compared with
+    `expected_text` ignoring case, spaces, and punctuation; `PROFOWL` vs `PROF0WL` or `PROFOWI` is
+    a mismatch; no reply is a mismatch.
+17. **Two critics compared (no key).** `--compare` lists each image and each requirement (or the
+    name read) where two critique files disagree, and nothing when they agree.
+18. **Manifest (no key).** The generator writes one entry per prompt with the fields above,
+    carrying the cost from the reply, tested with a fake client.
+19. **No key, no call.** Without `OPENROUTER_API_KEY`, `generate.py` and `critique.py` print one
+    line saying so and exit 1; nothing is billed.
+20. **Eval (key).** Five images on FLUX.2 klein, five critiques on each vision model, with fixed
+    seeds. Run by hand once; recorded in `CHECKS.md`. No test calls a model in a loop.
+
+### Failure handling (Week 6)
+- **Critique not JSON, or cut off** (`finish_reason` "length"): recorded as a failed critique with
+  the raw reply kept, never retried automatically.
+- **Image misspells the name:** reported as a name mismatch. The image is never regenerated.
+- **Critic misreads a correct name** (the October 19 "Integratlon" case): the code cannot tell
+  this apart from a real misspelling; the second model and a person looking at the image can.
+- **Image model rejects `seed` or `aspect_ratio`:** the error is printed and that prompt is
+  skipped; the finding (no reproducibility on that model) goes in `CHECKS.md`.
+
+### Cost estimate (Week 6)
+Five FLUX images at about $0.014 = $0.07; one Gemini comparison image about $0.035; one seed
+re-run $0.014; ten critiques (two calls each) well under $0.02. About $0.15 for the lab. Running
+the eval in a loop by mistake would multiply that, which is why no test calls a model.
